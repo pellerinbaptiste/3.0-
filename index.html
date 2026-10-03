@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Le Tiroir à Chaussettes</title>
+  <meta name="description" content="Clique, tire des chaussettes, forme des paires et complète ton tiroir.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧦</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>🧦 Le Tiroir à Chaussettes</h1>
+    <div class="stats">
+      <div class="stat"><span class="stat-label">Fils</span><strong id="stat-fils">0</strong></div>
+      <div class="stat"><span class="stat-label">Fils/s</span><strong id="stat-rate">0</strong></div>
+      <div class="stat"><span class="stat-label">Bonus</span><strong id="stat-mult">×1</strong></div>
+      <div class="stat"><span class="stat-label">Score</span><strong id="stat-score">0</strong></div>
+    </div>
+    <div id="season-banner" class="season-banner" hidden></div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="lavoir" aria-selected="true">🧺 Lavoir</button>
+    <button role="tab" data-tab="tirage">🎰 Tirage</button>
+    <button role="tab" data-tab="tiroir">🗄️ Tiroir</button>
+    <button role="tab" data-tab="profil">👤 Profil</button>
+  </nav>
+
+  <main>
+    <section id="tab-lavoir" class="panel" role="tabpanel">
+      <div class="clicker-zone">
+        <button id="basket" class="basket" aria-label="Récolter des fils">🧺</button>
+        <p class="hint">Clique sur le panier pour récolter des fils. <span id="click-value"></span></p>
+      </div>
+      <h2>Améliorations</h2>
+      <div id="upgrades" class="upgrades"></div>
+    </section>
+
+    <section id="tab-tirage" class="panel" role="tabpanel" hidden>
+      <div class="machine">
+        <div class="machine-screen" id="reveal">
+          <p class="reveal-placeholder">Glisse quelques fils dans la machine…</p>
+        </div>
+        <div class="machine-buttons">
+          <button id="draw-one" class="btn primary">Tirer 1 chaussette<br><small id="cost-one"></small></button>
+          <button id="draw-pack" class="btn gold">Pack de 10 (1 Rare garantie)<br><small id="cost-pack"></small></button>
+        </div>
+        <details class="odds">
+          <summary>Probabilités</summary>
+          <ul id="odds-list"></ul>
+        </details>
+      </div>
+    </section>
+
+    <section id="tab-tiroir" class="panel" role="tabpanel" hidden>
+      <div class="drawer-head">
+        <p id="drawer-summary"></p>
+        <button id="recycle" class="btn">♻️ Recycler les doublons</button>
+      </div>
+      <div id="drawer"></div>
+    </section>
+
+    <section id="tab-profil" class="panel" role="tabpanel" hidden>
+      <label class="name-field">Ton pseudo
+        <input id="name-input" maxlength="24" placeholder="Collectionneur anonyme">
+      </label>
+      <div id="profile-card"></div>
+      <div class="profile-actions">
+        <button id="share" class="btn primary">📤 Partager mon profil</button>
+      </div>
+      <div class="roadmap">
+        <h2>Bientôt dans le tiroir</h2>
+        <ul>
+          <li>🏆 Classement mondial : les plus grandes collections et les pièces les plus rares de la semaine</li>
+          <li>🔁 Échange de doublons entre joueurs</li>
+          <li>🤿 Mini-jeu de plongée sous la machine à laver</li>
+        </ul>
+      </div>
+      <button id="reset" class="btn danger small">Effacer ma partie</button>
+    </section>
+  </main>
+
+  <dialog id="modal">
+    <div id="modal-body"></div>
+    <form method="dialog"><button class="btn">Fermer</button></form>
+  </dialog>
+  <div id="toasts" aria-live="polite"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
