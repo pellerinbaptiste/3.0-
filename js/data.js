@@ -134,5 +134,7 @@ export const UPGRADES = [
   { id: 'machine', name: 'Machine à laver',     emoji: '🫧', desc: '+1 fil par seconde',      base: 60,    growth: 1.6 },
   { id: 'dryer',   name: 'Sèche-linge',         emoji: '🌀', desc: '+10 fils par seconde',    base: 900,   growth: 1.7 },
   { id: 'factory', name: 'Usine à chaussettes', emoji: '🏭', desc: '+80 fils par seconde',    base: 12000, growth: 1.8 },
+  { id: 'tank',    name: 'Grande bouteille',    emoji: '🤿', desc: "+25 % d'oxygène en plongée", base: 300, growth: 2.1, max: 10 },
+  { id: 'magnet',  name: 'Aimant à chaussettes', emoji: '🧲', desc: 'En plongée : attrape de plus loin, nage plus vite', base: 500, growth: 2.2, max: 10 },
   { id: 'luck',    name: 'Trèfle du lavoir',    emoji: '🍀', desc: 'Plus de chances de tirer une rareté', base: 400, growth: 2.4, max: 10 },
 ];

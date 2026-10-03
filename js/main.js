@@ -1,6 +1,7 @@
 import { RARITIES, RARITY_ORDER, SERIES, SERIES_BY_ID, SOCK_BY_ID, UPGRADES, monthName } from './data.js';
 import * as G from './engine.js';
 import { sockSVG, emptySockSVG } from './sock-svg.js';
+import { initDive } from './dive-ui.js';
 
 const SAVE_KEY = 'tiroir-a-chaussettes-v1';
 const $ = (sel) => document.querySelector(sel);
@@ -152,6 +153,14 @@ function showResults(results) {
   if (RARITY_ORDER.indexOf(best.sock.rarity) >= 3) {
     setTimeout(() => toast(`${best.sock.rarity === 'legendaire' ? '🌟 LÉGENDAIRE' : '💜 Épique'} : ${best.sock.name} !`), small ? sorted.length * 140 : 300);
   }
+  celebrate(results);
+  renderStats();
+  renderOdds();
+  save();
+}
+
+// Paires légendaires et séries complètes, que la chaussette vienne d'un tirage ou d'une plongée.
+function celebrate(results) {
   for (const result of results) {
     if (result.pairCompleted && RARITY_ORDER.indexOf(result.sock.rarity) === 4) {
       toast(`👑 Paire légendaire complète : ${result.sock.name} ! Une rareté absolue.`, 5000);
@@ -162,9 +171,6 @@ function showResults(results) {
         <p>+${fmt(serie.reward)} fils et +25 % de production pour toujours.</p>`);
     }
   }
-  renderStats();
-  renderOdds();
-  save();
 }
 
 $('#draw-one').addEventListener('click', () => showResults(G.draw(state)));
@@ -238,6 +244,8 @@ function profileHTML(p) {
         <div>Complétion<strong>${p.c} %</strong></div>
         <div>Paires<strong>${p.p}</strong></div>
         <div>Séries<strong>${p.k}</strong></div>
+        <div>Record plongée<strong>${p.m} m</strong></div>
+        <div>Tirages<strong>${p.d}</strong></div>
       </div>
     </div>
   </div>`;
@@ -258,7 +266,7 @@ $('#share').addEventListener('click', async () => {
   const summary = G.profileSummary(state);
   const url = `${location.origin}${location.pathname}#profil=${G.encodeProfile(summary)}`;
   const rarest = summary.r ? SOCK_BY_ID[summary.r].name : 'aucune';
-  const text = `🧦 Mon tiroir à chaussettes : ${fmt(summary.s)} points, ${summary.c} % complété, pièce la plus rare : ${rarest}. Tu fais mieux ?`;
+  const text = `🧦 Mon tiroir à chaussettes : ${fmt(summary.s)} points, ${summary.c} % complété, pièce la plus rare : ${rarest}, plongée record à ${summary.m} m. Tu fais mieux ?`;
   try {
     if (navigator.share) {
       await navigator.share({ title: 'Mon tiroir à chaussettes', text, url });
@@ -284,15 +292,27 @@ function openSharedProfile() {
   const profile = G.decodeProfile(match[1]);
   if (!profile) return;
   showModal(`<h2>Le tiroir de ${esc(profile.n)}</h2>${profileHTML(profile)}
-    <p>${profile.d} tirages. Compare avec ton propre score dans l'onglet Profil !</p>`);
+    <p>Compare avec ton propre score dans l'onglet Profil !</p>`);
   history.replaceState(null, '', location.pathname);
 }
 
 // --- Onglets et boucle -------------------------------------------------------------
 
-const TAB_RENDER = { lavoir: renderUpgrades, tirage: renderOdds, tiroir: renderDrawer, profil: renderProfile };
+const diveUI = initDive({
+  getState: () => state,
+  save,
+  renderStats,
+  toast,
+  celebrate,
+  cardHTML,
+});
+
+const TAB_RENDER = {
+  lavoir: renderUpgrades, tirage: renderOdds, plongee: () => diveUI.show(), tiroir: renderDrawer, profil: renderProfile,
+};
 
 function selectTab(name) {
+  if (name !== 'plongee') diveUI.leave();
   for (const btn of document.querySelectorAll('[data-tab]')) {
     btn.setAttribute('aria-selected', String(btn.dataset.tab === name));
   }
@@ -313,6 +333,7 @@ function renderAll() {
   renderOdds();
   renderDrawer();
   renderProfile();
+  diveUI.show();
 }
 
 let last = performance.now();
@@ -321,6 +342,7 @@ setInterval(() => {
   G.tick(state, (now - last) / 1000);
   last = now;
   renderStats();
+  if (!diveUI.active()) diveUI.tick();
 }, 100);
 setInterval(save, 5000);
 window.addEventListener('beforeunload', save);

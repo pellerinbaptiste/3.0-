@@ -45,7 +45,7 @@ export function sockSVG(sock, side = 'R', { size = 64 } = {}) {
   const emoji = sock.emoji
     ? `<text x="${side === 'L' ? 70 : 48}" y="62" font-size="26" text-anchor="middle" dominant-baseline="middle">${sock.emoji}</text>`
     : '';
-  return `<svg class="sock-svg" viewBox="0 0 118 140" width="${size}" height="${Math.round(size * 140 / 118)}" role="img" aria-label="${sock.name} (${side === 'L' ? 'gauche' : 'droite'})">
+  return `<svg xmlns="http://www.w3.org/2000/svg" class="sock-svg" viewBox="0 0 118 140" width="${size}" height="${Math.round(size * 140 / 118)}" role="img" aria-label="${sock.name} (${side === 'L' ? 'gauche' : 'droite'})">
     <defs>${pattern(id, sock.pattern, base, accent)}</defs>
     <g ${flip}>
       <path d="${SOCK_PATH}" fill="url(#${id})" stroke="rgba(0,0,0,.45)" stroke-width="2.5" stroke-linejoin="round"/>

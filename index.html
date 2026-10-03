@@ -21,10 +21,11 @@
   </header>
 
   <nav class="tabs" role="tablist">
-    <button role="tab" data-tab="lavoir" aria-selected="true">🧺 Lavoir</button>
-    <button role="tab" data-tab="tirage">🎰 Tirage</button>
-    <button role="tab" data-tab="tiroir">🗄️ Tiroir</button>
-    <button role="tab" data-tab="profil">👤 Profil</button>
+    <button role="tab" data-tab="lavoir" aria-selected="true"><span>🧺</span>Lavoir</button>
+    <button role="tab" data-tab="tirage"><span>🎰</span>Tirage</button>
+    <button role="tab" data-tab="plongee"><span>🤿</span>Plongée</button>
+    <button role="tab" data-tab="tiroir"><span>🗄️</span>Tiroir</button>
+    <button role="tab" data-tab="profil"><span>👤</span>Profil</button>
   </nav>
 
   <main>
@@ -53,6 +54,15 @@
       </div>
     </section>
 
+    <section id="tab-plongee" class="panel" role="tabpanel" hidden>
+      <div id="dive-lobby"></div>
+      <div id="dive-stage" hidden>
+        <canvas id="dive-canvas" aria-label="Plongée en cours"></canvas>
+        <button id="dive-surface" class="btn surface-btn">⬆️ Remonter</button>
+      </div>
+      <div id="dive-result" hidden></div>
+    </section>
+
     <section id="tab-tiroir" class="panel" role="tabpanel" hidden>
       <div class="drawer-head">
         <p id="drawer-summary"></p>
@@ -74,7 +84,6 @@
         <ul>
           <li>🏆 Classement mondial : les plus grandes collections et les pièces les plus rares de la semaine</li>
           <li>🔁 Échange de doublons entre joueurs</li>
-          <li>🤿 Mini-jeu de plongée sous la machine à laver</li>
         </ul>
       </div>
       <button id="reset" class="btn danger small">Effacer ma partie</button>

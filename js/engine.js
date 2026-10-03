@@ -25,6 +25,7 @@ export function createState(now = Date.now()) {
     upgrades: Object.fromEntries(UPGRADES.map((u) => [u.id, 0])),
     owned: {},              // { [sockId]: { L: nombre, R: nombre } }
     completedSeries: [],
+    dive: { tanks: 3, lastRecharge: now, record: 0, dives: 0 },
     lastSeen: now,
   };
 }
@@ -33,7 +34,9 @@ export function loadState(raw, now = Date.now()) {
   const state = createState(now);
   if (!raw || typeof raw !== 'object') return state;
   Object.assign(state, raw);
-  state.upgrades = { ...createState(now).upgrades, ...(raw.upgrades || {}) };
+  const defaults = createState(now);
+  state.upgrades = { ...defaults.upgrades, ...(raw.upgrades || {}) };
+  state.dive = { ...defaults.dive, ...(raw.dive || {}) };
   state.owned = Object.fromEntries(
     Object.entries(raw.owned || {}).filter(([id]) => SOCK_BY_ID[id]),
   );
@@ -88,6 +91,10 @@ export function autoRate(state) {
   return (u.machine * 1 + u.dryer * 10 + u.factory * 80) * multiplier(state);
 }
 
+export function addFils(state, amount) {
+  earn(state, amount);
+}
+
 function earn(state, amount) {
   state.fils += amount;
   state.totalFils += amount;
@@ -124,13 +131,13 @@ export function packCost(state) {
   return Math.round(drawCost(state) * PACK_SIZE * PACK_DISCOUNT);
 }
 
-export function rarityWeights(state) {
-  const luck = state.upgrades.luck || 0;
+export function rarityWeights(state, extraLuck = 0) {
+  const luck = (state.upgrades.luck || 0) + extraLuck;
   return RARITY_ORDER.map((r, i) => RARITIES[r].weight * (1 + 0.08 * luck * i));
 }
 
-export function rollRarity(state, rng = Math.random, minIndex = 0) {
-  const weights = rarityWeights(state).map((w, i) => (i < minIndex ? 0 : w));
+export function rollRarity(state, rng = Math.random, minIndex = 0, extraLuck = 0) {
+  const weights = rarityWeights(state, extraLuck).map((w, i) => (i < minIndex ? 0 : w));
   const total = weights.reduce((a, b) => a + b, 0);
   let roll = rng() * total;
   for (let i = 0; i < weights.length; i++) {
@@ -150,9 +157,10 @@ function addSock(state, sockId, side) {
   return entry;
 }
 
-function rollOne(state, rng, date, minRarity = 0) {
+// Choisit une chaussette tirable (sans l'ajouter). La plongée s'en sert avec des bonus de profondeur.
+export function pickSock(state, rng = Math.random, date = new Date(), { minRarity = 0, extraLuck = 0 } = {}) {
   const pool = availableSocks(date);
-  let rarity = rollRarity(state, rng, minRarity);
+  let rarity = rollRarity(state, rng, minRarity, extraLuck);
   let candidates = pool.filter((sock) => sock.rarity === rarity);
   // Si aucune chaussette de cette rareté n'est tirable, on descend d'un cran.
   while (candidates.length === 0) {
@@ -161,10 +169,30 @@ function rollOne(state, rng, date, minRarity = 0) {
   }
   const sock = pick(candidates, rng);
   const side = rng() < 0.5 ? 'L' : 'R';
+  return { sock, side };
+}
+
+function settle(state, result, hadPair) {
+  result.pairCompleted = !hadPair && isPair(state, result.sock.id);
+  result.seriesCompleted = claimCompletedSeries(state);
+  for (const id of result.seriesCompleted) result.bonusFils += SERIES_BY_ID[id].reward;
+  return result;
+}
+
+// Ajoute une chaussette à la collection et indique ce que ça débloque.
+export function receiveSock(state, sockId, side) {
+  const sock = SOCK_BY_ID[sockId];
+  const hadPair = isPair(state, sockId);
+  const isNew = !(state.owned[sockId]?.[side] > 0);
+  addSock(state, sockId, side);
+  return settle(state, { sock, side, isNew, surprise: null, bonusFils: 0 }, hadPair);
+}
+
+function rollOne(state, rng, date, minRarity = 0) {
+  const { sock, side } = pickSock(state, rng, date, { minRarity });
   const hadPair = isPair(state, sock.id);
   const isNew = !(state.owned[sock.id]?.[side] > 0);
-
-  const result = { sock, side, isNew, surprise: null, bonusFils: 0, pairCompleted: false, seriesCompleted: [] };
+  const result = { sock, side, isNew, surprise: null, bonusFils: 0 };
   addSock(state, sock.id, side);
 
   const surpriseRoll = rng();
@@ -178,11 +206,7 @@ function rollOne(state, rng, date, minRarity = 0) {
     result.bonusFils = drawCost(state) * 3;
     earn(state, result.bonusFils);
   }
-
-  result.pairCompleted = !hadPair && isPair(state, sock.id);
-  result.seriesCompleted = claimCompletedSeries(state);
-  for (const id of result.seriesCompleted) result.bonusFils += SERIES_BY_ID[id].reward;
-  return result;
+  return settle(state, result, hadPair);
 }
 
 export function draw(state, rng = Math.random, date = new Date()) {
@@ -306,6 +330,7 @@ export function profileSummary(state) {
     d: state.draws,
     r: rarest ? rarest.sock.id : null,
     rp: rarest ? rarest.pair : false,
+    m: Math.floor(state.dive.record),
   };
 }
 
@@ -331,6 +356,7 @@ export function decodeProfile(code) {
       d: Number(data.d) || 0,
       r: SOCK_BY_ID[data.r] ? data.r : null,
       rp: !!data.rp,
+      m: Math.max(0, Math.floor(Number(data.m) || 0)),
     };
   } catch {
     return null;
