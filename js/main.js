@@ -280,10 +280,15 @@ $('#share').addEventListener('click', async () => {
 });
 
 $('#reset').addEventListener('click', () => {
-  if (!confirm('Effacer définitivement ta partie ?')) return;
-  state = G.createState();
-  save();
-  renderAll();
+  showModal(`<h2>Effacer ta partie ?</h2><p>Ta collection, tes fils et ton record de plongée seront perdus définitivement.</p>
+    <button id="reset-confirm" class="btn danger">Oui, tout effacer</button>`);
+  $('#reset-confirm').addEventListener('click', () => {
+    state = G.createState();
+    save();
+    renderAll();
+    $('#modal').close();
+    toast('Partie effacée.');
+  });
 });
 
 function openSharedProfile() {
